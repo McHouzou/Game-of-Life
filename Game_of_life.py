@@ -17,7 +17,7 @@ def update_array(lattice_sums, current_value):
             return 0
 
     else: #if it's alive, decide on wether to keep alive or kill in next iteration
-        if (lattice_sums < 2) or (lattice_sums > 3):  #too isolated
+        if (lattice_sums < 2) or (lattice_sums > 3):  #too isolated or too crowded
             return 0
         else:
             return 1
@@ -203,7 +203,7 @@ class Game_of_life(object):
         a = animation.FuncAnimation(fig, self.update_anim,  frames = 1000, interval = 1, blit = True)
         writervideo = animation.FFMpegWriter(fps=40)
         #plt.show() #To animate live only (no saving of animation), comment out lines 206-207, and uncomment this line
-        a.save('Game_of_life.mp4', writer=writervideo) 
+        a.save('Game_of_life.mp4', writer=writervideo)
         plt.close()
 
 
