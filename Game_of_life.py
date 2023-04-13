@@ -95,6 +95,7 @@ class Game_of_life(object):
         Complete nsteps - number of steps/updates
         """
 
+        
         nn = np.array([[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]])
         nn_sums = np.zeros((self.N, self.M)) #store new lattice after update
         for n in nn: #find nearest neighbours of each lattice point

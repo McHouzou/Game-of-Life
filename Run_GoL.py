@@ -7,7 +7,6 @@ from Game_of_life import Game_of_life
 import time
 import numpy as np
 
-
 #Code as it was implemented in MVP
 print('\n' + "To choose intial conditions, you can type:")
 print(" - 'rand' for random")
@@ -17,11 +16,13 @@ print(" - 'spaceship'")
 initial_cond = input("Please give initial conditions: ")
 
 #Animation code
-N = 200 # grid size
+N = 100 # grid size
 G = Game_of_life(N, N, initial_cond)
 print(f"Initiated with {G.count_active()} active cells")
 G.run_animate(1) #argument is delay between snapshots in ms
-
+#t1 = time.time()
+#G.run_timesteps(1)
+#print(time.time() - t1)
 
 
 
