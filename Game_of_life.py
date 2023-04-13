@@ -22,12 +22,12 @@ def update_array(lattice_sums, current_value):
         else:
             return 1
 
-v_update_fast = np.vectorize(update_array)
+v_update = np.vectorize(update_array)  #Vectorize update function
 
 
 class Game_of_life(object):
 
-    def __init__(self, N, initial):
+    def __init__(self, N, M, initial):
         """
         Initialise lattice for game of life. 'N' is size of lattice, 'initial' is the initial state.
         Choose 'initial' from:
@@ -40,11 +40,27 @@ class Game_of_life(object):
         """
 
         self.N = N
-        self.lattice = np.zeros((N,N))
+        self.M = M
+        self.lattice = np.zeros((N,M))
 
-        if initial == "rand":
+
+        if isinstance(initial, np.ndarray): #If initial is an nd.array (i.e. explicitly given grid with initial condition)
+            # initial has to be a square array
+            if initial.shape[0] != initial.shape[1]:
+                raise TypeError("The initial array has to be square (i.e. of dimensions (m,m))")
+
+            m = initial.shape[0]
+            # if the size of "initial" is smaller than self.lattice, place "initial" at the centre of the lattice
+            if self.N > m:
+                index_start_i = (self.N - m)//2
+                index_start_j = (self.M - m)//2
+
+            self.lattice[index_start_i:index_start_i+m, index_start_j:index_start_j+m] = initial
+
+
+        elif initial == "rand":
             for i in range(N):
-                for j in range(N):
+                for j in range(M):
                     r = rnd.random()
                     if r > 0.5: self.lattice[i][j] = 1
 
@@ -71,6 +87,8 @@ class Game_of_life(object):
                 for p in positions:
                     self.lattice[p[0]][p[1]] = 1
 
+
+
     def update(self, nsteps = 1):
         """
         Simply update lattice according to rules.
@@ -78,10 +96,10 @@ class Game_of_life(object):
         """
 
         nn = np.array([[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]])
-        nn_sums = np.zeros((self.N, self.N)) #store new lattice after update
-        for n in nn:
+        nn_sums = np.zeros((self.N, self.M)) #store new lattice after update
+        for n in nn: #find nearest neighbours of each lattice point
             nn_sums += np.roll(np.roll(self.lattice, n[0], axis = 0), n[1], axis = 1)
-        self.lattice = v_update_fast(nn_sums, self.lattice)
+        self.lattice = v_update(nn_sums, self.lattice)
 
         """
         #Old update function - iterates over array
@@ -116,6 +134,21 @@ class Game_of_life(object):
         return self.lattice.sum(axis=1).sum(axis=0)
 
 
+    def current_com(self):
+        """
+        Returns the centre of mass of the whole system. If whole grid is dead, returns central coordinates
+        """
+        total_mass = self.count_active()
+        if total_mass != 0:
+            CM = np.array([0.0,0.0])
+            for i in range(self.N):
+                for j in range(self.M):
+                    CM += np.array([float(i),float(j)])*self.lattice[i][j]
+            CM = CM/total_mass
+        else:
+            CM = [self.N/2, self.M/2]
+        return CM
+
 
     def allsame(self, counter):
         """
@@ -127,6 +160,13 @@ class Game_of_life(object):
                 return False
         return True
 
+
+    def run_timesteps(self, Dt):
+        """
+        It performs Dt updates of grid and then stops.
+        """
+        for i in range(Dt):
+            self.update()
 
 
     def run_to_equilibrium(self):
@@ -169,7 +209,7 @@ class Game_of_life(object):
                 ypos = 0
                 cnt = 0
                 for i in range(self.N):
-                    for j in range(self.N):
+                    for j in range(self.M):
                         val = self.lattice[i][j]
                         xpos += val*j
                         ypos += val*i
@@ -187,24 +227,26 @@ class Game_of_life(object):
         if t%10 == 0:
             print(f"{t} {self.count_active()}")
         #update what is to be plotted
-        X, Y = np.meshgrid(range(self.N), range(self.N))
+        X, Y = np.meshgrid(range(self.M), range(self.N))
         self.mesh.set_array(self.lattice.ravel())
         return self.mesh,
 
 
 
-    def run_animate(self):
+    def run_animate(self, anim_interval):
         #Initiate plots
-        fig = plt.figure(figsize=(10, 10), dpi=80)
-        X, Y = np.meshgrid(range(self.N), range(self.N))
+        size_x = 11
+        size_y = 11*(self.N/self.M)
+        fig = plt.figure(figsize=(size_x, size_y), dpi=80)
+        X, Y = np.meshgrid(range(self.M), range(self.N))
         self.mesh = plt.pcolormesh(X, Y, self.lattice, cmap = plt.cm.binary, shading = 'auto', vmin=0, vmax=1)
 
         #Animate
-        a = animation.FuncAnimation(fig, self.update_anim,  frames = 1000, interval = 1, blit = True)
+        a = animation.FuncAnimation(fig, self.update_anim,  frames = 1000, interval = anim_interval, blit = True)
         writervideo = animation.FFMpegWriter(fps=40)
-        #plt.show() #To animate live only (no saving of animation), comment out lines 206-207, and uncomment this line
-        a.save('Game_of_life.mp4', writer=writervideo)
-        plt.close()
+        plt.show() #To animate live only (no saving of animation), comment out lines 206-207, and uncomment this line
+        #a.save("Game_of_life.mp4", writer=writervideo)
+        #plt.close()
 
 
 
