@@ -10,15 +10,15 @@ from Game_of_life import Game_of_life
 rng = np.random.default_rng()
 
 
-GEN = 50        # Number of generations
+GEN = 10        # Number of generations
 POP_SIZE = 50   # Population Size
 MR = 0.2        # Muation rate
 CR = 0.3        # Crossover rate
 Elitism = 0.2   # Implement Elitim? (keep a percentage of the fittest individuals unaltered to next generation)
-SIZE = 5        # Size of solution grid
-Dt = 40         # Number of timesteps to run for each fitness evaluation
-N = 25          # Size of y_dimension of whole grid
-M = 25          # Size of x_dimension of whole grid
+SIZE = 5       # Size of solution grid
+Dt = 100        # Number of timesteps to run for each fitness evaluation
+N = 100          # Size of y_dimension of whole grid
+M = 100          # Size of x_dimension of whole grid
 
 
 def get_individual_fitness(init_array):
@@ -30,8 +30,38 @@ def get_individual_fitness(init_array):
     init_array = init_array.reshape((SIZE,SIZE))
     G = Game_of_life(N, M, init_array)
 
+    #Or define fitness as maximum number of steps until equilibration.
+    return G.run_to_equilibrium()
+
+
+    """
+    #Or define fitness as variance in population time series.
+    alive_no = []
+    alive_no.append(G.count_active())
+    for i in range(Dt):
+        G.update()
+        alive_no.append(G.count_active())
+    return np.var(alive_no)/alive_no[0]
+    """
+
+
+    """
+    #Or define fitness as the maximum number of alive cells at any point in time.
+    max_alive = 0
+    init_alive = G.count_active()
+    for i in range(Dt):
+        G.update()
+        if G.count_active() > max_alive:
+            max_alive = G.count_active()
+    return max_alive/init_alive
+    """
+
+    """
+    #Or define fitness as the ratio between the final and initial number of alive cells
     active_0 = G.count_active()  
     G.run_timesteps(Dt)
+    return G.count_active()/active_0
+    """
 
     """
     #Or define fitness as the average x velocity of the centre of mass of the whole system
@@ -40,8 +70,6 @@ def get_individual_fitness(init_array):
     CM1 = G.current_com()
     return abs((CM1 - CM0)/Dt)
     """
-    return G.count_active()/active_0
-
 
 
 def run_evolution():
@@ -99,13 +127,12 @@ def run_evolution():
 
 
 
-"""
+
 #Run evolution method, accroding to constants defined at the beginning of the script
 run_evolution()
 
 to_visualize = np.loadtxt("Genetic_info.txt")
 size_organism = int(np.sqrt(to_visualize.shape[0]))
-G = Game_of_life(10, 100, to_visualize.reshape((size_organism, size_organism)))
+G = Game_of_life(N, M, to_visualize.reshape((size_organism, size_organism)))
 input("Press the Enter key to continue: ")
-G.run_animate()
-"""
+G.run_animate(20)

@@ -182,18 +182,44 @@ class Game_of_life(object):
         """
         t = 0
         cnt = np.zeros(self.N); cnt[0] = 1
+        #New version of cnt array
+        while True: #break when some periodic behaviour is found
+            cnt = np.roll(cnt, 1, axis=0)
+            self.update() #roll update and count active cites. Update cnt
+            cnt[0] = self.count_active()
+            t+=1
+
+            for step_check in range(1, self.N//2):
+                periodic = True
+                for j in range(step_check, self.N, step_check):
+                    if cnt[j] != cnt[0]:
+                        periodic = False
+                        break
+                if periodic and (t > self.N):
+                    return t + 1 - self.N
+            
+            if t == 2000:
+                return 2000 #if it never equilibrated, return 1000
+                        
+        """
+        #Old version of cnt array
         while (not self.allsame(cnt)) and (t<2000): #while the cnt array is still changing and t<5000, iterate
             cnt = np.roll(cnt, 1, axis=0)
             self.update() #roll update and count active cites. Update cnt
             cnt[0] = self.count_active()
             t+=1
+            
             if t%self.N == 0:
                 print(f"At time-step {t}, counter = {cnt[0]}")
-
+            
         if t!= 2000:
             return t + 1 - self.N
         else:
-            return None
+            return 2000 #if it never equilibrated, return 2000
+        """
+
+
+            
 
 
 
